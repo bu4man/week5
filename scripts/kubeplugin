@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+	echo "Usage: $0 <namespace>"
+	exit
+fi
+
+# Define command-line arguments
+
+echo "Resource, Namespace, Name, CPU, Memory"
+# Retrieve resource usage statistics from Kubernetes
+kubectl top pod -n $1 | tail -n +2 | while read line
+do
+  # Extract CPU and memory usage from the output
+  NAME=$(echo $line | awk '{print $1}')
+  CPU=$(echo $line | awk '{print $2}')
+  MEMORY=$(echo $line | awk '{print $3}')
+
+  # Output the statistics to the console
+  echo $NAME $1 $CPU $MEMORY
+done
