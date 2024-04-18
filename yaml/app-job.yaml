@@ -1,0 +1,20 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gsutil-rsync-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: gsutil-rsync-container
+        image: google/cloud-sdk:latest
+        command: ["sh", "-c", "gsutil -m rsync -r gs://glow-sportradar /data/input"]
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      restartPolicy: Never
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+

@@ -1,0 +1,77 @@
+# week5
+
+CMD while true; do { echo -e 'HTTP/1.1 200 OK\n\nVersion 2.0.0'; } | nc -vlp 8080; done
+docker push europe-west3-docker.pkg.dev/devops-420608/demo/app:v1.0.0
+
+gcloud config set project <>
+gcloud beta interactive 
+gcloud container clusters create demo --zone europe-west3-b --machine-type e2-medium --num-nodes 2
+
+
+k create ns demo
+k config set-context --current --namespace demo
+k create deploy demo --image europe-west3-docker.pkg.dev/devops-420608/demo/app:v1.0.0
+
+k get deploy
+k get po
+k get all
+
+
+# Create service
+k expose deploy demo --port 80 --type LoadBalancer --target-port 8080
+
+# Wait for IP assignment
+k get svc -w
+
+curl <IP>
+
+LB=$(k get svc demo -o jsonpath="{..ingress[0].ip}")
+echo $LB
+
+# Change Dockerfile, create version 2
+# push it to repository
+
+# In new screen
+while true; do curl $LB; sleep 0.3; done
+
+
+k set image deploy demo demo=europe-west3-docker.pkg.dev/devops-420608/demo/app:v2.0.0
+
+k get deployments.apps -o wide
+
+k rollout history deploy demo
+
+k rollout undo deploy demo --to-revision 1
+
+# Explain reason for deploy
+k annotate deploy demo kubernetes.io/change-cause="update to v2.0.0"
+
+
+# Labels
+k create deploy demo-2 --image=europe-west3-docker.pkg.dev/devops-420608/demo/app:v2.0.0
+
+k get po --show-labels
+
+# Check which pods to receive traffic
+k get svc -o wide
+k get po -l app=demo
+
+# Mark all pods with a new label
+k label po --all run=demo
+
+# Change selector from "app: demo" to "run: demo"
+k edit svc demo
+
+# Now service sends to all pods with label "run: demo"
+
+
+# Scale deployment
+k scale deploy demo --replicas 9
+# Still new pods have "old" label only and no label run:demo
+k get po -lapp,run
+# So mark again all pods
+k label po --all run=demo
+
+k scale deploy demo --replicas 0
+
+
